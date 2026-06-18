@@ -1,0 +1,387 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Nunito:wght@300;400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .carousel-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .carousel-slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1.2s ease-in-out;
+  }
+
+  .carousel-slide.active { opacity: 1; }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg,
+      rgba(180, 160, 220, 0.55) 0%,
+      rgba(160, 190, 230, 0.50) 50%,
+      rgba(230, 170, 200, 0.55) 100%);
+    z-index: 1;
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo-text {
+    font-family: 'Dancing Script', cursive;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 20px rgba(160, 100, 200, 0.7), 0 0 40px rgba(200, 150, 220, 0.4);
+    letter-spacing: 2px;
+  }
+
+  .logo-sub {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .login-card {
+    background: rgba(255, 245, 255, 0.18);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 200, 230, 0.35);
+    border-radius: 24px;
+    padding: 2.5rem 2.8rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 40px rgba(160, 100, 200, 0.2);
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.95);
+    text-align: center;
+    margin-bottom: 1.8rem;
+    letter-spacing: 1px;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 240, 250, 0.22);
+    border: 1px solid rgba(220, 180, 240, 0.4);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .form-group input::placeholder { color: rgba(255,255,255,0.5); }
+
+  .form-group input:focus {
+    border-color: rgba(220, 170, 255, 0.8);
+    background: rgba(255, 240, 255, 0.28);
+  }
+
+  .sqli-hint {
+    font-size: 0.72rem;
+    color: rgba(255, 220, 150, 0.9);
+    margin-top: 5px;
+    display: none;
+    font-style: italic;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    margin-top: 1rem;
+    background: linear-gradient(135deg, #c99de0 0%, #99b8e8 60%, #e8a8c8 100%);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #3a2060;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-login:active { transform: scale(0.98); }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  .divider-text {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 1px;
+  }
+
+  .links-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+  }
+
+  .links-row a {
+    color: rgba(220, 200, 255, 0.9);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .links-row a:hover { color: #fff; }
+
+  .result-box {
+    margin-top: 1.2rem;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    display: none;
+    line-height: 1.5;
+  }
+
+  .result-box.success {
+    background: rgba(160, 220, 180, 0.25);
+    border: 1px solid rgba(150, 220, 170, 0.4);
+    color: #b8ffcf;
+    display: block;
+  }
+
+  .result-box.error {
+    background: rgba(255, 160, 160, 0.2);
+    border: 1px solid rgba(255, 150, 150, 0.35);
+    color: #ffb8b8;
+    display: block;
+  }
+
+  .result-box.sqli-success {
+    background: rgba(255, 220, 100, 0.18);
+    border: 1px solid rgba(255, 220, 100, 0.4);
+    color: #ffe97a;
+    display: block;
+  }
+
+  .sql-query-display {
+    margin-top: 1rem;
+    background: rgba(30, 20, 50, 0.55);
+    border: 1px solid rgba(180, 150, 230, 0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: #c8b8f0;
+    line-height: 1.6;
+    display: none;
+    word-break: break-all;
+  }
+
+  .sql-query-display.visible { display: block; }
+
+  .sql-label {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .carousel-dots {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 3;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    transition: background 0.3s;
+    cursor: pointer;
+  }
+
+  .dot.active { background: rgba(255,255,255,0.9); }
+</style>
+</head>
+<body>
+
+<div class="carousel-bg" id="carousel">
+  <div class="carousel-slide active" style="background-image: url('https://butwhytho.net/wp-content/uploads/2025/08/Love-and-Deepspace-Characters-But-Why-Tho.jpg')"></div>
+  <div class="carousel-slide" style="background-image: url('https://kotaku.com/app/uploads/2026/04/Love-And-Deepspace-Lingering-Lust.jpeg')"></div>
+  <div class="carousel-slide" style="background-image: url('https://otomekitten.com/wp-content/uploads/2025/10/lads06.png?w=904')"></div>
+  <div class="carousel-slide" style="background-image: url('https://images.genius.com/c46887c01609dd94ae040a4fbca81cd2.1000x525x1.webp')"></div>
+  <div class="carousel-slide" style="background-image: url('https://r.res.easebar.com/pic/20231218/4871e778-68a9-4287-b771-ccbe021d89a8.jpg')"></div>
+</div>
+
+<div class="overlay"></div>
+
+<div class="page-wrapper">
+  <div class="logo-area">
+    <div class="logo-text">LoveAndGhost</div>
+    <div class="logo-sub">Find your constellation</div>
+  </div>
+
+  <div class="login-card">
+    <div class="card-title">Inicia sesion en tu cuenta</div>
+
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="username" placeholder="Tu nombre de usuario" oninput="checkSQLi(this, 'hint-user')" />
+      <div class="sqli-hint" id="hint-user">Posible payload SQL detectado</div>
+    </div>
+
+    <div class="form-group">
+      <label>Contrasena</label>
+      <input type="text" id="password" placeholder="Tu contrasena" oninput="checkSQLi(this, 'hint-pass')" />
+      <div class="sqli-hint" id="hint-pass">Posible payload SQL detectado</div>
+    </div>
+
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+
+    <div class="sql-query-display" id="queryDisplay">
+      <div class="sql-label">Consulta SQL generada (vulnerable):</div>
+      <span id="queryText"></span>
+    </div>
+
+    <div class="result-box" id="resultBox"></div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">o</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="links-row">
+      <a href="#">Olvide mi contrasena</a>
+      <a href="#">Crear cuenta</a>
+    </div>
+  </div>
+</div>
+
+<div class="carousel-dots" id="dots"></div>
+
+<script>
+  const slides = document.querySelectorAll('.carousel-slide');
+  const dotsContainer = document.getElementById('dots');
+  let current = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsContainer.appendChild(d);
+  });
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    document.querySelectorAll('.dot')[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    document.querySelectorAll('.dot')[current].classList.add('active');
+  }
+
+  setInterval(() => goTo((current + 1) % slides.length), 4000);
+
+  const sqlKeywords = ["'", '"', '--', ';', 'OR', 'AND', '1=1', 'DROP', 'SELECT', 'UNION', 'INSERT', 'DELETE', '/*', '*/'];
+
+  function checkSQLi(input, hintId) {
+    const val = input.value.toUpperCase();
+    const hint = document.getElementById(hintId);
+    const hasSQLi = sqlKeywords.some(k => val.includes(k.toUpperCase()));
+    hint.style.display = hasSQLi ? 'block' : 'none';
+  }
+
+  const users = { admin: 'galaxy2024', luna: 'deepspace' };
+
+  function doLogin() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const queryDisplay = document.getElementById('queryDisplay');
+    const queryText = document.getElementById('queryText');
+    const resultBox = document.getElementById('resultBox');
+
+    const rawQuery = `SELECT * FROM usuarios WHERE nombre = '${user}' AND contrasena = '${pass}';`;
+    queryText.textContent = rawQuery;
+    queryDisplay.classList.add('visible');
+
+    const isSQLi = sqlKeywords.some(k => user.toUpperCase().includes(k.toUpperCase()) || pass.toUpperCase().includes(k.toUpperCase()));
+
+    if (isSQLi) {
+      resultBox.className = 'result-box sqli-success';
+      resultBox.innerHTML = `<strong>VULNERABILIDAD EXPLOTADA</strong><br>La consulta fue manipulada con un payload SQL Injection. Un atacante podria omitir la autenticacion completamente.<br><br><em>Ejemplo clasico: usuario = <code>' OR '1'='1</code></em>`;
+    } else if (users[user] && users[user] === pass) {
+      resultBox.className = 'result-box success';
+      resultBox.innerHTML = `Bienvenida, <strong>${user}</strong>. Acceso concedido a LoveAndGhost.`;
+    } else {
+      resultBox.className = 'result-box error';
+      resultBox.textContent = 'Usuario o contrasena incorrectos. Intenta de nuevo.';
+    }
+  }
+</script>
+</body>
+</html>
