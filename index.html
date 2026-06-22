@@ -1,387 +1,806 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoveAndGhost</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Nunito:wght@300;400;500;600&display=swap');
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --pink:   #e8a8c8;
+  --blue:   #99b8e8;
+  --purple: #c99de0;
+  --pink-d: #b06090;
+  --blue-d: #4a78c0;
+  --purple-d: #8040b0;
+  --white90: rgba(255,255,255,0.9);
+  --white70: rgba(255,255,255,0.7);
+  --white50: rgba(255,255,255,0.5);
+  --white30: rgba(255,255,255,0.3);
+  --white15: rgba(255,255,255,0.15);
+  --card-bg: rgba(255,245,255,0.18);
+  --card-border: rgba(255,200,230,0.35);
+  --input-bg: rgba(255,240,250,0.22);
+  --input-border: rgba(220,180,240,0.4);
+  --input-focus: rgba(220,170,255,0.8);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --font-display: 'Dancing Script', cursive;
+  --font-body: 'Nunito', sans-serif;
+}
 
-  body {
-    font-family: 'Nunito', sans-serif;
-    min-height: 100vh;
-    overflow: hidden;
-    position: relative;
-  }
+body {
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: #fff;
+}
 
-  .carousel-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-  }
+/* ── PAGES ── */
+.page { display: none; min-height: 100vh; position: relative; }
+.page.active { display: flex; }
 
-  .carousel-slide {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    transition: opacity 1.2s ease-in-out;
-  }
+/* ── CAROUSEL BACKGROUND ── */
+.carousel-bg {
+  position: fixed; inset: 0; z-index: 0;
+}
+.carousel-slide {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.2s ease-in-out;
+}
+.carousel-slide.active { opacity: 1; }
 
-  .carousel-slide.active { opacity: 1; }
+.overlay-auth {
+  position: fixed; inset: 0; z-index: 1;
+  background: linear-gradient(135deg,
+    rgba(180,160,220,0.58) 0%,
+    rgba(160,190,230,0.52) 50%,
+    rgba(230,170,200,0.58) 100%);
+}
 
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg,
-      rgba(180, 160, 220, 0.55) 0%,
-      rgba(160, 190, 230, 0.50) 50%,
-      rgba(230, 170, 200, 0.55) 100%);
-    z-index: 1;
-  }
+/* ── STATIC BACKGROUND (main page) ── */
+.static-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+}
+.overlay-main {
+  position: fixed; inset: 0; z-index: 1;
+  background: linear-gradient(160deg,
+    rgba(140,110,200,0.62) 0%,
+    rgba(100,140,220,0.55) 50%,
+    rgba(200,130,180,0.62) 100%);
+}
 
-  .page-wrapper {
-    position: relative;
-    z-index: 2;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-  }
+/* ── CAROUSEL DOTS ── */
+.carousel-dots {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 5;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--white30); cursor: pointer;
+  transition: background 0.3s;
+}
+.dot.active { background: var(--white90); }
 
-  .logo-area {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
+/* ── AUTH WRAPPER ── */
+.auth-wrapper {
+  position: relative; z-index: 2;
+  width: 100%; display: flex;
+  flex-direction: column; align-items: center;
+  justify-content: center; padding: 2.5rem 1rem;
+  min-height: 100vh;
+}
 
-  .logo-text {
-    font-family: 'Dancing Script', cursive;
-    font-size: 3rem;
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 2px 20px rgba(160, 100, 200, 0.7), 0 0 40px rgba(200, 150, 220, 0.4);
-    letter-spacing: 2px;
-  }
+/* ── LOGO ── */
+.logo-area { text-align: center; margin-bottom: 1.8rem; }
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 3rem; font-weight: 700; color: #fff;
+  text-shadow: 0 2px 20px rgba(160,100,200,0.7), 0 0 40px rgba(200,150,220,0.4);
+  letter-spacing: 2px;
+}
+.logo-sub {
+  font-size: 0.8rem; color: var(--white70);
+  letter-spacing: 4px; text-transform: uppercase; margin-top: 4px;
+}
 
-  .logo-sub {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.85);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
+/* ── AUTH CARD ── */
+.auth-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2.8rem;
+  width: 100%; max-width: 430px;
+  box-shadow: 0 8px 40px rgba(160,100,200,0.2);
+}
 
-  .login-card {
-    background: rgba(255, 245, 255, 0.18);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 200, 230, 0.35);
-    border-radius: 24px;
-    padding: 2.5rem 2.8rem;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: 0 8px 40px rgba(160, 100, 200, 0.2);
-  }
+.card-title {
+  font-size: 1.05rem; font-weight: 600;
+  color: var(--white90); text-align: center;
+  margin-bottom: 1.6rem; letter-spacing: 0.5px;
+}
 
-  .card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.95);
-    text-align: center;
-    margin-bottom: 1.8rem;
-    letter-spacing: 1px;
-  }
+/* ── FORM ── */
+.form-group { margin-bottom: 1.1rem; }
+.form-group label {
+  display: block; font-size: 0.75rem; font-weight: 700;
+  color: var(--white70); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 5px;
+}
+.form-group input {
+  width: 100%; padding: 11px 15px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.92rem; color: #fff;
+  outline: none; transition: border-color 0.2s, background 0.2s;
+}
+.form-group input::placeholder { color: var(--white50); }
+.form-group input:focus {
+  border-color: var(--input-focus);
+  background: rgba(255,240,255,0.28);
+}
 
-  .form-group {
-    margin-bottom: 1.2rem;
-  }
+.sqli-hint {
+  font-size: 0.7rem; color: rgba(255,220,150,0.9);
+  margin-top: 4px; display: none; font-style: italic;
+}
 
-  .form-group label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.85);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
+/* ── BUTTONS ── */
+.btn-primary {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, var(--purple) 0%, var(--blue) 60%, var(--pink) 100%);
+  border: none; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.95rem; font-weight: 700;
+  color: #3a2060; cursor: pointer; letter-spacing: 0.5px;
+  transition: opacity 0.2s, transform 0.1s; margin-top: 0.8rem;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  .form-group input {
-    width: 100%;
-    padding: 12px 16px;
-    background: rgba(255, 240, 250, 0.22);
-    border: 1px solid rgba(220, 180, 240, 0.4);
-    border-radius: 12px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
-    color: #fff;
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
-  }
+.btn-ghost {
+  background: transparent; border: 1px solid var(--white30);
+  border-radius: var(--radius-sm); padding: 10px;
+  width: 100%; font-family: var(--font-body); font-size: 0.88rem;
+  font-weight: 600; color: var(--white90); cursor: pointer;
+  transition: background 0.2s; margin-top: 0.5rem;
+}
+.btn-ghost:hover { background: var(--white15); }
 
-  .form-group input::placeholder { color: rgba(255,255,255,0.5); }
+/* ── DIVIDER ── */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 1.2rem 0 0.8rem;
+}
+.divider-line { flex: 1; height: 1px; background: var(--white30); }
+.divider-text { font-size: 0.72rem; color: var(--white50); letter-spacing: 1px; }
 
-  .form-group input:focus {
-    border-color: rgba(220, 170, 255, 0.8);
-    background: rgba(255, 240, 255, 0.28);
-  }
+/* ── LINKS ROW ── */
+.links-row {
+  display: flex; justify-content: space-between;
+  font-size: 0.76rem; margin-top: 1rem;
+}
+.links-row a { color: rgba(220,200,255,0.9); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+.links-row a:hover { color: #fff; }
 
-  .sqli-hint {
-    font-size: 0.72rem;
-    color: rgba(255, 220, 150, 0.9);
-    margin-top: 5px;
-    display: none;
-    font-style: italic;
-  }
+/* ── RESULT BOXES ── */
+.result-box {
+  margin-top: 1rem; padding: 11px 14px;
+  border-radius: var(--radius-sm); font-size: 0.82rem;
+  display: none; line-height: 1.5;
+}
+.result-box.success  { background: rgba(160,220,180,0.22); border: 1px solid rgba(150,220,170,0.4); color: #b8ffcf; display: block; }
+.result-box.error    { background: rgba(255,160,160,0.18); border: 1px solid rgba(255,150,150,0.35); color: #ffb8b8; display: block; }
+.result-box.sqli-hit { background: rgba(255,220,100,0.16); border: 1px solid rgba(255,220,100,0.4); color: #ffe97a; display: block; }
+.result-box.info     { background: rgba(160,190,240,0.18); border: 1px solid rgba(160,190,240,0.35); color: #c0d8ff; display: block; }
 
-  .btn-login {
-    width: 100%;
-    padding: 13px;
-    margin-top: 1rem;
-    background: linear-gradient(135deg, #c99de0 0%, #99b8e8 60%, #e8a8c8 100%);
-    border: none;
-    border-radius: 12px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #3a2060;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: opacity 0.2s, transform 0.1s;
-  }
+/* ── SQL QUERY DISPLAY ── */
+.sql-query-display {
+  margin-top: 0.9rem;
+  background: rgba(20,10,40,0.6);
+  border: 1px solid rgba(180,150,230,0.3);
+  border-radius: var(--radius-sm);
+  padding: 9px 13px;
+  font-family: 'Courier New', monospace; font-size: 0.7rem;
+  color: #c8b8f0; line-height: 1.6; display: none; word-break: break-all;
+}
+.sql-query-display.visible { display: block; }
+.sql-label { font-size: 0.67rem; color: var(--white50); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 3px; font-family: var(--font-body); }
 
-  .btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-login:active { transform: scale(0.98); }
+/* ═══════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════ */
+#page-main {
+  flex-direction: column; align-items: stretch;
+}
 
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 1.5rem 0 1rem;
-  }
+/* ── NAVBAR ── */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+  height: 64px;
+  background: rgba(60,30,90,0.45);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(220,180,255,0.2);
+}
+.nav-logo {
+  font-family: var(--font-display); font-size: 1.7rem; font-weight: 700;
+  color: #fff; text-shadow: 0 2px 12px rgba(180,120,230,0.6);
+}
+.nav-user {
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700; color: #3a2060;
+}
+.nav-username { font-size: 0.85rem; color: var(--white90); font-weight: 600; }
+.btn-logout {
+  background: rgba(255,255,255,0.12); border: 1px solid var(--white30);
+  border-radius: 8px; padding: 6px 14px;
+  font-family: var(--font-body); font-size: 0.78rem; font-weight: 600;
+  color: var(--white90); cursor: pointer; transition: background 0.2s;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.22); }
 
-  .divider-line {
-    flex: 1;
-    height: 1px;
-    background: rgba(255,255,255,0.2);
-  }
+/* ── MAIN CONTENT ── */
+.main-content {
+  position: relative; z-index: 2;
+  padding: 90px 2rem 3rem;
+  min-height: 100vh;
+}
 
-  .divider-text {
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.55);
-    letter-spacing: 1px;
-  }
+.section-title {
+  font-size: 1.5rem; font-weight: 700; color: #fff;
+  margin-bottom: 0.3rem;
+  text-shadow: 0 2px 10px rgba(160,100,200,0.5);
+}
+.section-sub {
+  font-size: 0.85rem; color: var(--white70); margin-bottom: 2rem;
+}
 
-  .links-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.78rem;
-  }
+/* ── CANDIDATES GRID ── */
+.candidates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1.4rem;
+}
 
-  .links-row a {
-    color: rgba(220, 200, 255, 0.9);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
+.candidate-card {
+  background: rgba(255,245,255,0.16);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,200,230,0.3);
+  border-radius: 20px; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.candidate-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 35px rgba(160,100,200,0.35);
+}
 
-  .links-row a:hover { color: #fff; }
+.candidate-img {
+  width: 100%; height: 240px;
+  object-fit: cover; object-position: top;
+  display: block;
+}
 
-  .result-box {
-    margin-top: 1.2rem;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    display: none;
-    line-height: 1.5;
-  }
+.candidate-info {
+  padding: 1rem 1.1rem 1.2rem;
+}
+.candidate-name {
+  font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 2px;
+}
+.candidate-meta {
+  font-size: 0.78rem; color: var(--white70); margin-bottom: 0.6rem;
+}
+.candidate-bio {
+  font-size: 0.8rem; color: var(--white80); line-height: 1.45; margin-bottom: 0.9rem;
+}
+.candidate-tags {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.tag {
+  font-size: 0.68rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+  background: rgba(200,160,240,0.25);
+  border: 1px solid rgba(200,160,240,0.4);
+  color: rgba(230,210,255,0.95);
+}
+.btn-like {
+  width: 100%; margin-top: 0.8rem; padding: 9px;
+  background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+  border: none; border-radius: 10px;
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 700;
+  color: #3a2060; cursor: pointer; transition: opacity 0.2s;
+}
+.btn-like:hover { opacity: 0.85; }
 
-  .result-box.success {
-    background: rgba(160, 220, 180, 0.25);
-    border: 1px solid rgba(150, 220, 170, 0.4);
-    color: #b8ffcf;
-    display: block;
-  }
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: rgba(60,20,90,0.9); border: 1px solid rgba(200,160,240,0.4);
+  backdrop-filter: blur(12px); border-radius: 30px;
+  padding: 10px 24px; font-size: 0.85rem; color: #e0d0ff;
+  z-index: 100; transition: transform 0.35s ease; pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
 
-  .result-box.error {
-    background: rgba(255, 160, 160, 0.2);
-    border: 1px solid rgba(255, 150, 150, 0.35);
-    color: #ffb8b8;
-    display: block;
-  }
-
-  .result-box.sqli-success {
-    background: rgba(255, 220, 100, 0.18);
-    border: 1px solid rgba(255, 220, 100, 0.4);
-    color: #ffe97a;
-    display: block;
-  }
-
-  .sql-query-display {
-    margin-top: 1rem;
-    background: rgba(30, 20, 50, 0.55);
-    border: 1px solid rgba(180, 150, 230, 0.3);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.72rem;
-    color: #c8b8f0;
-    line-height: 1.6;
-    display: none;
-    word-break: break-all;
-  }
-
-  .sql-query-display.visible { display: block; }
-
-  .sql-label {
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.5);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 4px;
-    font-family: 'Nunito', sans-serif;
-  }
-
-  .carousel-dots {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    z-index: 3;
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.35);
-    transition: background 0.3s;
-    cursor: pointer;
-  }
-
-  .dot.active { background: rgba(255,255,255,0.9); }
+/* ── LOADING SPINNER ── */
+.spinner {
+  width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: inline-block;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<div class="carousel-bg" id="carousel">
-  <div class="carousel-slide active" style="background-image: url('https://butwhytho.net/wp-content/uploads/2025/08/Love-and-Deepspace-Characters-But-Why-Tho.jpg')"></div>
-  <div class="carousel-slide" style="background-image: url('https://kotaku.com/app/uploads/2026/04/Love-And-Deepspace-Lingering-Lust.jpeg')"></div>
-  <div class="carousel-slide" style="background-image: url('https://otomekitten.com/wp-content/uploads/2025/10/lads06.png?w=904')"></div>
-  <div class="carousel-slide" style="background-image: url('https://images.genius.com/c46887c01609dd94ae040a4fbca81cd2.1000x525x1.webp')"></div>
-  <div class="carousel-slide" style="background-image: url('https://r.res.easebar.com/pic/20231218/4871e778-68a9-4287-b771-ccbe021d89a8.jpg')"></div>
+<!-- ═══════════════════════════════════════
+     PAGE: LOGIN
+═══════════════════════════════════════ -->
+<div id="page-login" class="page active">
+  <!-- Carousel bg (only visible on auth pages) -->
+  <div class="carousel-bg" id="carousel">
+    <div class="carousel-slide active" style="background-image:url('https://butwhytho.net/wp-content/uploads/2025/08/Love-and-Deepspace-Characters-But-Why-Tho.jpg')"></div>
+    <div class="carousel-slide" style="background-image:url('https://kotaku.com/app/uploads/2026/04/Love-And-Deepspace-Lingering-Lust.jpeg')"></div>
+    <div class="carousel-slide" style="background-image:url('https://otomekitten.com/wp-content/uploads/2025/10/lads06.png?w=904')"></div>
+    <div class="carousel-slide" style="background-image:url('https://images.genius.com/c46887c01609dd94ae040a4fbca81cd2.1000x525x1.webp')"></div>
+    <div class="carousel-slide" style="background-image:url('https://r.res.easebar.com/pic/20231218/4871e778-68a9-4287-b771-ccbe021d89a8.jpg')"></div>
+  </div>
+  <div class="overlay-auth"></div>
+  <div class="carousel-dots" id="carousel-dots-login"></div>
+
+  <div class="auth-wrapper">
+    <div class="logo-area">
+      <div class="logo-text">LoveAndGhost</div>
+      <div class="logo-sub">Find your constellation</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="card-title">Inicia sesion en tu cuenta</div>
+
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="login-user" placeholder="Tu nombre de usuario" oninput="checkSQLi(this,'hint-lu')">
+        <div class="sqli-hint" id="hint-lu">Posible payload SQL detectado</div>
+      </div>
+
+      <div class="form-group">
+        <label>Contrasena</label>
+        <input type="text" id="login-pass" placeholder="Tu contrasena" oninput="checkSQLi(this,'hint-lp')">
+        <div class="sqli-hint" id="hint-lp">Posible payload SQL detectado</div>
+      </div>
+
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar</button>
+
+      <div class="sql-query-display" id="login-query">
+        <div class="sql-label">Consulta SQL generada (vulnerable):</div>
+        <span id="login-query-text"></span>
+      </div>
+      <div class="result-box" id="login-result"></div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">o</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="links-row">
+        <a onclick="goPage('page-register')">Crear cuenta nueva</a>
+        <a href="#">Olvide mi contrasena</a>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="overlay"></div>
-
-<div class="page-wrapper">
-  <div class="logo-area">
-    <div class="logo-text">LoveAndGhost</div>
-    <div class="logo-sub">Find your constellation</div>
+<!-- ═══════════════════════════════════════
+     PAGE: REGISTER
+═══════════════════════════════════════ -->
+<div id="page-register" class="page">
+  <div class="carousel-bg">
+    <div class="carousel-slide active" style="background-image:url('https://butwhytho.net/wp-content/uploads/2025/08/Love-and-Deepspace-Characters-But-Why-Tho.jpg')"></div>
+    <div class="carousel-slide" style="background-image:url('https://kotaku.com/app/uploads/2026/04/Love-And-Deepspace-Lingering-Lust.jpeg')"></div>
+    <div class="carousel-slide" style="background-image:url('https://otomekitten.com/wp-content/uploads/2025/10/lads06.png?w=904')"></div>
+    <div class="carousel-slide" style="background-image:url('https://images.genius.com/c46887c01609dd94ae040a4fbca81cd2.1000x525x1.webp')"></div>
+    <div class="carousel-slide" style="background-image:url('https://r.res.easebar.com/pic/20231218/4871e778-68a9-4287-b771-ccbe021d89a8.jpg')"></div>
   </div>
+  <div class="overlay-auth"></div>
 
-  <div class="login-card">
-    <div class="card-title">Inicia sesion en tu cuenta</div>
-
-    <div class="form-group">
-      <label>Usuario</label>
-      <input type="text" id="username" placeholder="Tu nombre de usuario" oninput="checkSQLi(this, 'hint-user')" />
-      <div class="sqli-hint" id="hint-user">Posible payload SQL detectado</div>
+  <div class="auth-wrapper">
+    <div class="logo-area">
+      <div class="logo-text">LoveAndGhost</div>
+      <div class="logo-sub">Crea tu cuenta</div>
     </div>
 
-    <div class="form-group">
-      <label>Contrasena</label>
-      <input type="text" id="password" placeholder="Tu contrasena" oninput="checkSQLi(this, 'hint-pass')" />
-      <div class="sqli-hint" id="hint-pass">Posible payload SQL detectado</div>
-    </div>
+    <div class="auth-card">
+      <div class="card-title">Registro de nueva cuenta</div>
 
-    <button class="btn-login" onclick="doLogin()">Entrar</button>
+      <div class="form-group">
+        <label>Nombre de usuario</label>
+        <input type="text" id="reg-user" placeholder="Elige un nombre de usuario">
+      </div>
+      <div class="form-group">
+        <label>Correo electronico</label>
+        <input type="text" id="reg-email" placeholder="tu@correo.com">
+      </div>
+      <div class="form-group">
+        <label>Contrasena</label>
+        <input type="text" id="reg-pass" placeholder="Minimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>Confirmar contrasena</label>
+        <input type="text" id="reg-pass2" placeholder="Repite tu contrasena">
+      </div>
 
-    <div class="sql-query-display" id="queryDisplay">
-      <div class="sql-label">Consulta SQL generada (vulnerable):</div>
-      <span id="queryText"></span>
-    </div>
+      <button class="btn-primary" id="btn-register" onclick="doRegister()">Crear cuenta</button>
+      <button class="btn-ghost" onclick="goPage('page-login')">Ya tengo cuenta, iniciar sesion</button>
 
-    <div class="result-box" id="resultBox"></div>
-
-    <div class="divider">
-      <div class="divider-line"></div>
-      <div class="divider-text">o</div>
-      <div class="divider-line"></div>
-    </div>
-
-    <div class="links-row">
-      <a href="#">Olvide mi contrasena</a>
-      <a href="#">Crear cuenta</a>
+      <div class="result-box" id="register-result"></div>
     </div>
   </div>
 </div>
 
-<div class="carousel-dots" id="dots"></div>
+<!-- ═══════════════════════════════════════
+     PAGE: MAIN
+═══════════════════════════════════════ -->
+<div id="page-main" class="page">
+  <div class="static-bg" style="background-image:url('https://wallpapercave.com/wp/wp15337275.jpg')"></div>
+  <div class="overlay-main"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-logo">LoveAndGhost</div>
+    <div class="nav-user">
+      <div class="nav-avatar" id="nav-avatar">?</div>
+      <span class="nav-username" id="nav-username">Usuario</span>
+      <button class="btn-logout" onclick="doLogout()">Cerrar sesion</button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="main-content">
+    <div class="section-title">Candidatos para ti</div>
+    <div class="section-sub">Estas son las personas que podrian hacer match contigo hoy</div>
+
+    <div class="candidates-grid">
+
+      <div class="candidate-card">
+        <img class="candidate-img" src="https://i.pinimg.com/736x/9e/c5/e8/9ec5e85eac6695ba9b2d5dee990f8bf8.jpg" alt="Candidato 1">
+        <div class="candidate-info">
+          <div class="candidate-name">Caelus, 24</div>
+          <div class="candidate-meta">Perdido entre estrellas</div>
+          <div class="candidate-bio">Colecciono recuerdos de lugares que nunca he visitado. Me gustan las noches sin luna.</div>
+          <div class="candidate-tags">
+            <span class="tag">Astronomia</span>
+            <span class="tag">Cafe</span>
+            <span class="tag">Misterio</span>
+          </div>
+          <button class="btn-like" onclick="showToast('Le diste like a Caelus')">Me interesa</button>
+        </div>
+      </div>
+
+      <div class="candidate-card">
+        <img class="candidate-img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrmi3itrJrwAr_sOF0Alm4suqo9_mtpRnjZ0isx1rkl0XBt0lkPnBH4v24&s=10" alt="Candidato 2">
+        <div class="candidate-info">
+          <div class="candidate-name">Rafayel, 26</div>
+          <div class="candidate-meta">Pintor de galaxias</div>
+          <div class="candidate-bio">Pinto lo que los ojos no pueden ver. Mi estudio huele a acrilico y universo.</div>
+          <div class="candidate-tags">
+            <span class="tag">Arte</span>
+            <span class="tag">Viajes</span>
+            <span class="tag">Musica</span>
+          </div>
+          <button class="btn-like" onclick="showToast('Le diste like a Rafayel')">Me interesa</button>
+        </div>
+      </div>
+
+      <div class="candidate-card">
+        <img class="candidate-img" src="https://i.pinimg.com/736x/cd/2e/59/cd2e593b9acdd70e76f3d2e56f15ceb0.jpg" alt="Candidato 3">
+        <div class="candidate-info">
+          <div class="candidate-name">Zayne, 27</div>
+          <div class="candidate-meta">Medico de guardia eterna</div>
+          <div class="candidate-bio">Me cuesta soltar las cosas. Soy mas sincero a las 3am que a las 3pm.</div>
+          <div class="candidate-tags">
+            <span class="tag">Ciencia</span>
+            <span class="tag">Lectura</span>
+            <span class="tag">Piano</span>
+          </div>
+          <button class="btn-like" onclick="showToast('Le diste like a Zayne')">Me interesa</button>
+        </div>
+      </div>
+
+      <div class="candidate-card">
+        <img class="candidate-img" src="https://i.pinimg.com/736x/83/9e/6f/839e6ffcf086867de6aed699e0e9d883.jpg" alt="Candidato 4">
+        <div class="candidate-info">
+          <div class="candidate-name">Xavier, 25</div>
+          <div class="candidate-meta">Comandante con corazon</div>
+          <div class="candidate-bio">Protejo lo que me importa. No soy bueno con las palabras pero si con los actos.</div>
+          <div class="candidate-tags">
+            <span class="tag">Estrategia</span>
+            <span class="tag">Cocina</span>
+            <span class="tag">Deporte</span>
+          </div>
+          <button class="btn-like" onclick="showToast('Le diste like a Xavier')">Me interesa</button>
+        </div>
+      </div>
+
+      <div class="candidate-card">
+        <img class="candidate-img" src="https://i.pinimg.com/736x/7b/38/5a/7b385a2b90fb4ee6b93221e8a8e819d1.jpg" alt="Candidato 5">
+        <div class="candidate-info">
+          <div class="candidate-name">Sylus, 28</div>
+          <div class="candidate-meta">Sombra con luz propia</div>
+          <div class="candidate-bio">No confio facilmente, pero cuando lo hago es para siempre. El silencio es mi idioma.</div>
+          <div class="candidate-tags">
+            <span class="tag">Fotografia</span>
+            <span class="tag">Noche</span>
+            <span class="tag">Gatos</span>
+          </div>
+          <button class="btn-like" onclick="showToast('Le diste like a Sylus')">Me interesa</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-  const slides = document.querySelectorAll('.carousel-slide');
-  const dotsContainer = document.getElementById('dots');
-  let current = 0;
+/* ══════════════════════════════════════
+   SUPABASE CLIENT
+══════════════════════════════════════ */
+const supabase = window.supabase.createClient(
+  'https://eiocbwvxofvdszmmuehq.supabase.co',
+  'sb_publishable_UeNIA7baZlNU1HKlqnlJAw_v_f0c3S2'
+);
 
-  slides.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.onclick = () => goTo(i);
-    dotsContainer.appendChild(d);
+/* ══════════════════════════════════════
+   CAROUSEL
+══════════════════════════════════════ */
+const slides = document.querySelectorAll('#page-login .carousel-slide');
+const dotsEl = document.getElementById('carousel-dots-login');
+let currentSlide = 0;
+
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goSlide(i);
+  dotsEl.appendChild(d);
+});
+
+function goSlide(n) {
+  slides[currentSlide].classList.remove('active');
+  dotsEl.querySelectorAll('.dot')[currentSlide].classList.remove('active');
+  currentSlide = n;
+  slides[currentSlide].classList.add('active');
+  dotsEl.querySelectorAll('.dot')[currentSlide].classList.add('active');
+}
+setInterval(() => goSlide((currentSlide + 1) % slides.length), 4500);
+
+/* ══════════════════════════════════════
+   PAGE NAVIGATION
+══════════════════════════════════════ */
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  clearResults();
+}
+
+function clearResults() {
+  ['login-result','register-result'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'result-box'; el.innerHTML = ''; }
   });
+  const qd = document.getElementById('login-query');
+  if (qd) qd.classList.remove('visible');
+}
 
-  function goTo(n) {
-    slides[current].classList.remove('active');
-    document.querySelectorAll('.dot')[current].classList.remove('active');
-    current = n;
-    slides[current].classList.add('active');
-    document.querySelectorAll('.dot')[current].classList.add('active');
+/* ══════════════════════════════════════
+   SQL INJECTION DETECTOR (UI hint)
+══════════════════════════════════════ */
+const SQL_KEYWORDS = ["'", '"', '--', ';', ' OR ', ' AND ', '1=1', 'DROP', 'SELECT',
+                      'UNION', 'INSERT', 'DELETE', 'UPDATE', '/*', '*/', 'EXEC'];
+
+function checkSQLi(input, hintId) {
+  const val = input.value.toUpperCase();
+  const found = SQL_KEYWORDS.some(k => val.includes(k.toUpperCase()));
+  document.getElementById(hintId).style.display = found ? 'block' : 'none';
+}
+
+/* ══════════════════════════════════════
+   LOGIN  --  consulta vulnerable + real
+══════════════════════════════════════ */
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const btn  = document.getElementById('btn-login');
+  const qd   = document.getElementById('login-query');
+  const qt   = document.getElementById('login-query-text');
+  const rb   = document.getElementById('login-result');
+
+  if (!user || !pass) {
+    showResult(rb, 'error', 'Completa todos los campos.');
+    return;
   }
 
-  setInterval(() => goTo((current + 1) % slides.length), 4000);
+  /* Muestra siempre la query que se construiria si el backend fuera vulnerable */
+  const rawQuery = `SELECT * FROM usuarios WHERE nombre = '${user}' AND contrasena = '${pass}';`;
+  qt.textContent = rawQuery;
+  qd.classList.add('visible');
 
-  const sqlKeywords = ["'", '"', '--', ';', 'OR', 'AND', '1=1', 'DROP', 'SELECT', 'UNION', 'INSERT', 'DELETE', '/*', '*/'];
+  /* Deteccion de payload SQLi para el mensaje educativo */
+  const isSQLi = SQL_KEYWORDS.some(k =>
+    user.toUpperCase().includes(k.toUpperCase()) ||
+    pass.toUpperCase().includes(k.toUpperCase())
+  );
 
-  function checkSQLi(input, hintId) {
-    const val = input.value.toUpperCase();
-    const hint = document.getElementById(hintId);
-    const hasSQLi = sqlKeywords.some(k => val.includes(k.toUpperCase()));
-    hint.style.display = hasSQLi ? 'block' : 'none';
+  if (isSQLi) {
+    showResult(rb, 'sqli-hit',
+      '<strong>VULNERABILIDAD EXPLOTADA</strong><br>' +
+      'El payload manipulo la consulta. Con un backend vulnerable, este input ' +
+      'omitira la autenticacion porque la condicion siempre es verdadera.<br><br>' +
+      '<em>Solucion: usar consultas preparadas (prepared statements).</em>');
+    return;
   }
 
-  const users = { admin: 'galaxy2024', luna: 'deepspace' };
+  /* Login real contra Supabase (parametrizado -- seguro) */
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Verificando...';
 
-  function doLogin() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    const queryDisplay = document.getElementById('queryDisplay');
-    const queryText = document.getElementById('queryText');
-    const resultBox = document.getElementById('resultBox');
+  try {
+    /* ─── CONSULTA REAL (parametrizada, segura) ─── */
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, nivel')
+      .eq('nombre', user)
+      .eq('contrasena', pass)
+      .maybeSingle();
 
-    const rawQuery = `SELECT * FROM usuarios WHERE nombre = '${user}' AND contrasena = '${pass}';`;
-    queryText.textContent = rawQuery;
-    queryDisplay.classList.add('visible');
+    if (error) throw error;
 
-    const isSQLi = sqlKeywords.some(k => user.toUpperCase().includes(k.toUpperCase()) || pass.toUpperCase().includes(k.toUpperCase()));
-
-    if (isSQLi) {
-      resultBox.className = 'result-box sqli-success';
-      resultBox.innerHTML = `<strong>VULNERABILIDAD EXPLOTADA</strong><br>La consulta fue manipulada con un payload SQL Injection. Un atacante podria omitir la autenticacion completamente.<br><br><em>Ejemplo clasico: usuario = <code>' OR '1'='1</code></em>`;
-    } else if (users[user] && users[user] === pass) {
-      resultBox.className = 'result-box success';
-      resultBox.innerHTML = `Bienvenida, <strong>${user}</strong>. Acceso concedido a LoveAndGhost.`;
+    if (data) {
+      showResult(rb, 'success', `Bienvenida, <strong>${data.nombre}</strong>. Redirigiendo...`);
+      setTimeout(() => openMain(data.nombre), 1000);
     } else {
-      resultBox.className = 'result-box error';
-      resultBox.textContent = 'Usuario o contrasena incorrectos. Intenta de nuevo.';
+      showResult(rb, 'error', 'Usuario o contrasena incorrectos. Intenta de nuevo.');
     }
+  } catch (err) {
+    showResult(rb, 'error', 'Error de conexion: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
   }
+}
+
+/* ══════════════════════════════════════
+   REGISTER  --  inserta usuario nuevo
+══════════════════════════════════════ */
+async function doRegister() {
+  const user  = document.getElementById('reg-user').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value.trim();
+  const pass2 = document.getElementById('reg-pass2').value.trim();
+  const btn   = document.getElementById('btn-register');
+  const rb    = document.getElementById('register-result');
+
+  if (!user || !email || !pass || !pass2) {
+    showResult(rb, 'error', 'Completa todos los campos.');
+    return;
+  }
+  if (pass !== pass2) {
+    showResult(rb, 'error', 'Las contrasenas no coinciden.');
+    return;
+  }
+  if (pass.length < 6) {
+    showResult(rb, 'error', 'La contrasena debe tener al menos 6 caracteres.');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showResult(rb, 'error', 'Ingresa un correo valido.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Creando cuenta...';
+
+  try {
+    /* Verificar si el usuario ya existe */
+    const { data: existing } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('nombre', user)
+      .maybeSingle();
+
+    if (existing) {
+      showResult(rb, 'error', 'Ese nombre de usuario ya esta registrado. Elige otro.');
+      return;
+    }
+
+    /* ─── INSERT parametrizado (seguro) ─── */
+    const { error } = await supabase
+      .from('usuarios')
+      .insert([{ nombre: user, correo: email, contrasena: pass, nivel: 'usuario' }]);
+
+    if (error) throw error;
+
+    showResult(rb, 'success',
+      `Cuenta creada exitosamente para <strong>${user}</strong>. ` +
+      'Ahora puedes iniciar sesion.');
+
+    setTimeout(() => {
+      clearInputs(['reg-user','reg-email','reg-pass','reg-pass2']);
+      goPage('page-login');
+    }, 2000);
+
+  } catch (err) {
+    if (err.code === '23505') {
+      showResult(rb, 'error', 'Ese usuario o correo ya existe.');
+    } else {
+      showResult(rb, 'error', 'Error al registrar: ' + err.message);
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Crear cuenta';
+  }
+}
+
+/* ══════════════════════════════════════
+   OPEN MAIN PAGE
+══════════════════════════════════════ */
+function openMain(username) {
+  const initials = username.substring(0, 2).toUpperCase();
+  document.getElementById('nav-avatar').textContent   = initials;
+  document.getElementById('nav-username').textContent = username;
+  goPage('page-main');
+}
+
+/* ══════════════════════════════════════
+   LOGOUT
+══════════════════════════════════════ */
+function doLogout() {
+  clearInputs(['login-user','login-pass']);
+  goPage('page-login');
+  showToast('Sesion cerrada correctamente');
+}
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function showResult(el, type, html) {
+  el.className = 'result-box ' + type;
+  el.innerHTML = html;
+}
+
+function clearInputs(ids) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
 </script>
 </body>
 </html>
